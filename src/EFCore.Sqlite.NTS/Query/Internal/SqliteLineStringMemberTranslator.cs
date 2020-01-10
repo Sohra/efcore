@@ -39,7 +39,11 @@ namespace Microsoft.EntityFrameworkCore.Sqlite.Query.Internal
             if (_memberToFunctionName.TryGetValue(member, out var functionName))
             {
                 SqlExpression translation = _sqlExpressionFactory.Function(
-                    functionName, new[] { instance }, returnType);
+                    functionName,
+                    new[] { instance },
+                    nullResultAllowed: true,
+                    argumentsPropagateNullability: new[] { true },
+                    returnType);
 
                 if (returnType == typeof(bool))
                 {

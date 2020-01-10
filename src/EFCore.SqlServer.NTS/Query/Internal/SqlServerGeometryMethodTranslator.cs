@@ -97,10 +97,15 @@ namespace Microsoft.EntityFrameworkCore.SqlServer.Query.Internal
                         ? _typeMappingSource.FindMapping(method.ReturnType, storeType)
                         : _typeMappingSource.FindMapping(method.ReturnType);
 
+                    var finalArguments = Simplify(typeMappedArguments, isGeography);
+
                     return _sqlExpressionFactory.Function(
                         instance,
                         functionName,
-                        Simplify(typeMappedArguments, isGeography),
+                        finalArguments,
+                        nullResultAllowed: true,
+                        instancePropagatesNullability: true,
+                        argumentsPropagateNullability: finalArguments.Select(a => true),
                         method.ReturnType,
                         resultTypeMapping);
                 }
@@ -116,6 +121,9 @@ namespace Microsoft.EntityFrameworkCore.SqlServer.Query.Internal
                                 arguments[0],
                                 _sqlExpressionFactory.Constant(1))
                         },
+                        nullResultAllowed: true,
+                        instancePropagatesNullability: true,
+                        argumentsPropagateNullability: new[] { true },
                         method.ReturnType,
                         _typeMappingSource.FindMapping(method.ReturnType, storeType));
                 }
@@ -136,11 +144,16 @@ namespace Microsoft.EntityFrameworkCore.SqlServer.Query.Internal
                                     : _typeMappingSource.FindMapping(argument.Type)));
                     }
 
+                    var finalArguments = Simplify(new[] { typeMappedArguments[0] }, isGeography);
+
                     return _sqlExpressionFactory.LessThanOrEqual(
                         _sqlExpressionFactory.Function(
                             instance,
                             "STDistance",
-                            Simplify(new[] { typeMappedArguments[0] }, isGeography),
+                            finalArguments,
+                            nullResultAllowed: true,
+                            instancePropagatesNullability: true,
+                            argumentsPropagateNullability: finalArguments.Select(a => true),
                             typeof(double)),
                         typeMappedArguments[1]);
                 }
