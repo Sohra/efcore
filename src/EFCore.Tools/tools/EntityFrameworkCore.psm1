@@ -675,7 +675,21 @@ function GetProject($projectName)
         return Get-Project
     }
 
-    return Get-Project $projectName
+    $project = Get-Project $projectName -ErrorAction:SilentlyContinue -ErrorVariable getProjectResult
+    if ($project -eq $null -and $getProjectResult[0].CategoryInfo.Category -eq [System.Management.Automation.ErrorCategory]::ObjectNotFound)
+    {
+        $project = $DTE.Solution |
+            % { $_.ProjectItems } |
+            % { $_.SubProject } |
+            ? { $_.FullName -like '*.shproj' } |
+            ? { $_.Name -eq $projectName } |
+            Select-Object -First 1
+        if ($project -eq $null)
+        {
+            throw $getProjectResult[0]
+        }
+    }
+    return $project
 }
 
 function GetStartupProject($name, $fallbackProject)
